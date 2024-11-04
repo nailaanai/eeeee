@@ -24,7 +24,7 @@ export const addReview = async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
   }
 
-  const sql = `INSERT INTO reviews (movie_id, author, content, content) VALUES (?, ?, ?, ?)`;
+  const sql = `INSERT INTO reviews (movie_id, author, content, rating) VALUES (?, ?, ?, ?)`;
 
   try {
       await sequelize.query(sql, {

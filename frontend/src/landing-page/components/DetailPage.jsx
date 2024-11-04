@@ -18,7 +18,8 @@ const DetailPage = () => {
         rating: 1,
         content: ''
     });
-    
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // Tambahkan state untuk status login
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewComment({ ...newComment, [name]: value });
@@ -26,22 +27,22 @@ const DetailPage = () => {
     
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
-    
+
         const reviewData = {
             movie_id: id,
             author: newComment.author,
             rating: newComment.rating,
             content: newComment.content,
         };
-    
+
         try {
-            const response = await fetch(`http://localhost:5000/reviews/add`, {
+            const response = await fetch("http://localhost:5000/reviews/add", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(reviewData),
                 credentials: 'include'
             });
-    
+
             if (response.ok) {
                 alert('Review added successfully');
                 const newReview = await response.json();
@@ -59,6 +60,22 @@ const DetailPage = () => {
     };
 
     useEffect(() => {
+        // Periksa status login pengguna
+        const checkLoginStatus = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/api/auth/check-auth", {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                setIsLoggedIn(data.success); // Jika sukses, berarti pengguna sudah login
+            } catch (error) {
+                console.error('Error checking login status:', error);
+                setIsLoggedIn(false);
+            }
+        };
+        checkLoginStatus();
+
+        // Ambil data film dari endpoint
         fetch(`http://localhost:5000/landing/movies/${id}`)
             .then((res) => res.json())
             .then((data) => {
@@ -170,53 +187,60 @@ const DetailPage = () => {
                     </Col>
                 </Row>
 
-                <Row className="mb-4 mt-4">
-                    <Col md={12}>
-                        <div className="bg-dark text-white p-3 mb-4">
-                            <h4 className='mb-4'>Add Your Review!</h4>
-                            <Form onSubmit={handleCommentSubmit}>
-                                <Form.Group className="mb-3" controlId="formBasicName">
-                                    <Form.Label>Name</Form.Label>
-                                    <Form.Control 
-                                        type="text" 
-                                        placeholder="Enter Your Name" 
-                                        name="author"
-                                        value={newComment.author}
-                                        onChange={handleInputChange} 
-                                    />
-                                </Form.Group>
+                {/* Tampilkan form jika pengguna login */}
+                {isLoggedIn ? (
+                    <Row className="mb-4 mt-4">
+                        <Col md={12}>
+                            <div className="bg-dark text-white p-3 mb-4">
+                                <h4 className='mb-4'>Add Your Review!</h4>
+                                <Form onSubmit={handleCommentSubmit}>
+                                    <Form.Group className="mb-3" controlId="formBasicName">
+                                        <Form.Label>Name</Form.Label>
+                                        <Form.Control 
+                                            type="text" 
+                                            placeholder="Enter Your Name" 
+                                            name="author"
+                                            value={newComment.author}
+                                            onChange={handleInputChange} 
+                                        />
+                                    </Form.Group>
 
-                                <Form.Group className="mb-3" controlId="formBasicRating">
-                                    <Form.Label>Rating</Form.Label>
-                                    <Form.Control 
-                                        as="select"
-                                        name="rating"
-                                        value={newComment.rating}
-                                        onChange={handleInputChange}>
-                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(star => (
-                                            <option key={star} value={star}>{star} Star</option>
-                                        ))} 
-                                    </Form.Control>
-                                </Form.Group>
+                                    <Form.Group className="mb-3" controlId="formBasicRating">
+                                        <Form.Label>Rating</Form.Label>
+                                        <Form.Control 
+                                            as="select"
+                                            name="rating"
+                                            value={newComment.rating}
+                                            onChange={handleInputChange}>
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(star => (
+                                                <option key={star} value={star}>{star} Star</option>
+                                            ))} 
+                                        </Form.Control>
+                                    </Form.Group>
 
-                                <Form.Group className="mb-3" controlId="formBasicThoughts">
-                                    <Form.Label>Your Review</Form.Label>
-                                    <Form.Control 
-                                        as="textarea" 
-                                        rows={3} 
-                                        name="content"
-                                        value={newComment.content}
-                                        onChange={handleInputChange} 
-                                    />
-                                </Form.Group>
+                                    <Form.Group className="mb-3" controlId="formBasicThoughts">
+                                        <Form.Label>Your Review</Form.Label>
+                                        <Form.Control 
+                                            as="textarea" 
+                                            rows={3} 
+                                            name="content"
+                                            value={newComment.content}
+                                            onChange={handleInputChange} 
+                                        />
+                                    </Form.Group>
 
-                                <Button variant="warning" type="submit">
-                                    Submit
-                                </Button>
-                            </Form>
-                        </div>
-                    </Col>
-                </Row>
+                                    <Button variant="warning" type="submit">
+                                        Submit
+                                    </Button>
+                                </Form>
+                            </div>
+                        </Col>
+                    </Row>
+                ) : (
+                    <p style={{ color: 'white', textAlign: 'center', fontWeight: 'bold', marginTop: '20px', fontSize:'30px' }}>
+                        Please log in to add a review.
+                    </p>
+                )}
 
                 <Footer/>
             </Container>
